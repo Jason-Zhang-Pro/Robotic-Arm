@@ -4,11 +4,19 @@ A robotic arm project that connects mathematical modeling, trajectory planning, 
 
 ## Hardware Demo
 
-Short hardware demonstrations show the assembled arm operating over a chessboard. Click a preview to watch the clip.
+Two control modes demonstrate the arm's chess manipulation workflow. Click a preview to watch the short video.
 
-[![Hardware demonstration 1](media/demo-01.jpg)](media/demo-01.mp4)
+### Automatic Pick & Place
 
-[![Hardware demonstration 2](media/demo-02.jpg)](media/demo-02.mp4)
+The arm executes a programmed manipulation sequence, coordinating its joints and gripper over the chessboard.
+
+[![Watch automatic pick and place](media/automatic-pick-and-place.jpg)](media/automatic-pick-and-place.mp4)
+
+### Joystick Pick & Place
+
+An operator directs the arm using the joystick interface during piece handling.
+
+[![Watch joystick pick and place](media/joystick-pick-and-place.jpg)](media/joystick-pick-and-place.mp4)
 
 ## What the Project Implements
 
