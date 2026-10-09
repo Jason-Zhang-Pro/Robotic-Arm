@@ -29,3 +29,6 @@ Thumbs.db
 **/robot_status.txt
 __pycache__/
 node_modules/
+
+# Curated portfolio demos
+!media/*.mp4

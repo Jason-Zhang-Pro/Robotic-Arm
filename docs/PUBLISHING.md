@@ -1,6 +1,6 @@
 # Publishing checklist
 
-This snapshot has no remote configured and has not been pushed.
+The repository is published at https://github.com/Jason-Zhang-Pro/Robotic-Arm. These notes cover source ownership and future release preparation.
 
 - Choose the A4 version demonstrated successfully on your hardware, then document its calibration and cache generation procedure.
 - Inspect MATLAB live-script metadata/output and retained figures/data for personal or team information. Text-only screening cannot establish that binary files are clear.
@@ -18,4 +18,4 @@ git remote add origin <YOUR_GITHUB_REPOSITORY_URL>
 git push -u origin main
 ```
 
-Replace the placeholder with the actual repository URL. A remote URL and visibility were not supplied during preparation.
+Replace the placeholder with the actual repository URL. The configured remote is https://github.com/Jason-Zhang-Pro/Robotic-Arm.git.

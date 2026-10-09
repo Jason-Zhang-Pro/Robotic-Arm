@@ -1,51 +1,85 @@
-# MCEN90028 Robotics Systems
+# Robotic Arm — Modeling, Motion Planning & Chess Manipulation
 
-MATLAB coursework and experiments for robotic-arm kinematics, workspace analysis, Jacobians, trajectory planning, and robot-assisted chess manipulation.
+A robotic arm project that connects mathematical modeling, trajectory planning, and physical servo control through a chess pick-and-place application. Developed as a team project for MCEN90028 Robotics Systems, it covers forward kinematics, workspace analysis, Jacobian-based inverse kinematics, and interactive control of an assembled arm.
 
-This repository is a curated source snapshot, not a verified final release. Experimental versions retain their original names so distinct control strategies and tuning work remain traceable.
+## Hardware Demo
 
-## Project map
+Short hardware demonstrations show the assembled arm operating over a chessboard. Click a preview to watch the clip.
 
-| Directory | Contents and starting points |
-|---|---|
-| `projects/01-kinematics` | Zero configuration and reachable workspace: `Zero_position.m`, `WorkSpace.m`, `Zero_position_Workspace.m` |
-| `projects/02-jacobian` | Symbolic Jacobian derivation and verification: `Jacobian.m`, `Jacobian_verification.m`, `Assignment2_robot_system.m` |
-| `projects/03-path-planning` | URDF models, trajectory simulation and assignment snapshot: `Path_planning.m`, `Simulation.m`, `Assignment3_AG16/Assignment3_Matlab_AG16.m` |
-| `projects/04-hardware-prototype` | Early physical-arm position-control trials; `task1_position_control.m` currently enables a manual joint trial |
-| `projects/05-matlab-control` | Serial communication helpers, feedback logging and semicircle IK experiments |
-| `experiments/a0`–`a3` | Additional coursework iterations, MATLAB live scripts and figures |
-| `experiments/a4` | Chess robot session, cached moves, joystick control and camera integration |
-| Other `experiments/a4*` directories | Position/velocity control, board/arm tilt, compensation and demonstration variants |
+[![Hardware demonstration 1](media/demo-01.jpg)](media/demo-01.mp4)
 
-No A4 variant has been selected as the definitive hardware release. Names such as `final`, `readyforrdemo` and `finalv2` are historical labels, not validation evidence.
+[![Hardware demonstration 2](media/demo-02.jpg)](media/demo-02.mp4)
 
-## Requirements
+## What the Project Implements
 
-- MATLAB; the original setup notes target R2022b.
-- Robotics System Toolbox for `importrobot`, rigid-body models and IK workflows.
-- Symbolic Math Toolbox for symbolic Jacobian scripts.
-- Arduino IDE, compatible board, servos and joystick for physical control.
-- The course's `UoM-RS-Starter_Code`, `UoM_RS_MATLAB_LIBRARIES` and `UoM-RS-Arduino_Project_Library`, obtained separately through the course or their authorized upstream sources.
-- Camera scripts additionally depend on Python/Pillow and FFmpeg; the JavaScript camera server needs Node.js.
+- **Kinematics and workspace modeling:** link geometry, zero configurations, forward transformations, and reachable workspace visualization.
+- **Jacobian analysis:** symbolic derivation, verification scripts, and torque evaluation outputs.
+- **Constrained inverse kinematics:** damped least-squares updates with joint limits, bounded steps, elbow clearance, and wrist-orientation preferences.
+- **Chess manipulation:** board-square coordinate mapping and approach, grasp, lift, transfer, and release sequences.
+- **Cached motion planning:** precomputed IK configurations for scripted moves, joystick positions, and transfers.
+- **Physical-arm control:** serial motor commands, feedback acquisition, zero-offset calibration, and position/velocity control implementations.
+- **Operator interfaces:** joystick-assisted manipulation and camera capture/cropping for operator-selected moves.
 
-## Starting with simulation
+## System Architecture
 
-Open MATLAB in the individual project directory so relative URDF paths resolve. Inspect the selected script's settings, then run a simulation/workspace script such as `projects/01-kinematics/WorkSpace.m` or the Assignment 3 snapshot. Avoid adding every experiment directory to the MATLAB path: duplicate function names can select the wrong implementation.
+```mermaid
+flowchart LR
+    A[Scripted moves / Joystick] --> B[Board coordinate mapping]
+    B --> C[Pick-and-place sequence]
+    C --> D[Constrained IK / Cached configurations]
+    D --> E[Joint commands and calibration]
+    E --> F[MATLAB serial interface]
+    F --> G[Arduino and servo arm]
+    G --> H[Feedback and diagnostics]
+    I[Camera board view] --> J[Operator-selected move]
+    J --> B
+```
 
-`projects/03-path-planning/so101.urdf` references `assets/*.stl`, but those meshes were not found in the supplied directory. That model needs its original mesh assets before it can be rendered correctly.
+The motion module links chessboard targets to joint commands. It handles arm geometry, posture constraints, calibration offsets, and pick-and-place sequencing. Camera tooling provides a board view for an operator to select moves.
 
-## Preparing hardware experiments
+## Engineering Approach
 
-1. Choose one A4 variant and work from that directory.
-2. Supply its `external/UoM-RS-Starter_Code`, `external/UoM_RS_MATLAB_LIBRARIES`, and `external/UoM-RS-Arduino_Project_Library` directories. These third-party libraries are intentionally not bundled here.
-3. Inspect `setup_a4.m` and run it to configure paths/constants. Other prototype scripts may require the MATLAB library on the path explicitly.
-4. Recreate the servo zero-offset calibration and required caches using the chosen variant's calibration/precompute functions. Not every variant contains every generator; inspect the cache references before running a controller.
-5. Review COM port, motor IDs/directions, joint limits, board geometry, gripper settings and startup motion for your physical setup.
+**Model the reachable space.** Geometry and coordinate transformations describe the arm; workspace and trajectory plots support inspection of board reachability and planned poses.
 
-The camera PowerShell scripts preserve the original machine-specific Python/FFmpeg installation paths and camera device name. Edit those settings before use. The source code has not been executed against MATLAB, Arduino or a physical robot during repository preparation.
+**Control posture as well as position.** The IK implementation uses damping, bounded updates, elbow clearance, and wrist-angle constraints to generate configurations suited to piece handling.
 
-## Repository scope
+**Separate planning from execution.** Precomputation scripts generate reusable configurations, while execution controllers load those configurations for scripted and interactive motion.
 
-Excluded: ZIP bundles, lectures and assignment handouts, reports/Word documents, third-party CAD, raw audio/video, MATLAB autosaves, camera captures, runtime logs, servo calibration and generated MAT caches. Small `UoM-RS-Var_Def.mat` constants files are retained for older scripts that load them directly.
+**Account for the assembled hardware.** Servo offsets, motor direction settings, board geometry, feedback logs, and tilt-compensation implementations support calibration and control tuning.
 
-Source provenance and redistribution rights have not been established for every coursework/helper file. No open-source license has been assigned. Review course rules and team ownership before making the repository public; see `docs/PUBLISHING.md`.
+## Repository Structure
+
+```text
+projects/
+  01-kinematics/          Forward kinematics and workspace
+  02-jacobian/            Jacobian derivation and verification
+  03-path-planning/       URDF models and trajectory simulation
+  04-hardware-prototype/  Position-control development
+  05-matlab-control/      Serial communication and trajectory tools
+  06-chess-robot/         Integrated chess manipulation and interfaces
+media/                   Short hardware demos and preview images
+docs/                    Setup and configuration notes
+archive/                 Earlier modeling and control iterations
+```
+
+For a technical review, begin with the [chess movement module](projects/06-chess-robot/matlab/chessMoveModule.m), [IK precomputation](projects/06-chess-robot/matlab/precomputeTask1IK.m), and [joystick controller](projects/06-chess-robot/matlab/runTask2JoystickControl.m). Alternative position/velocity and compensation implementations are retained in `archive/`.
+
+## Simulation Outputs
+
+![Cartesian trajectory over time](archive/experiments/a3/Fig1_xyz_vs_time.png)
+
+![Robot configurations along a planned trajectory](archive/experiments/a3/Fig4_robot_poses_D1_to_H8_jacobian_IK.png)
+
+## Technology Stack
+
+- **Modeling and control:** MATLAB, Robotics System Toolbox, Symbolic Math Toolbox, URDF.
+- **Hardware:** Arduino, servo motors, serial communication, joystick.
+- **Camera tooling:** Python, Pillow, FFmpeg, Node.js, PowerShell.
+
+## Getting Started
+
+1. Open `projects/01-kinematics/` in MATLAB and run `WorkSpace.m` to explore the modeled workspace.
+2. Explore trajectory and URDF scripts in `projects/03-path-planning/`.
+3. For physical manipulation, configure the course communication libraries, motor settings, board geometry, servo calibration, and IK caches in `projects/06-chess-robot/`.
+
+See [setup instructions](docs/SETUP.md) for dependencies and hardware configuration. Load one controller variant at a time because implementations share function names.
