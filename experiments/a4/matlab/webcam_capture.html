@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chessboard Webcam Capture</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #111; color: #eee; }
+    main { display: grid; gap: 12px; padding: 16px; max-width: 960px; margin: 0 auto; }
+    video, canvas { width: 100%; max-height: 72vh; object-fit: contain; background: #000; }
+    button { width: 140px; padding: 10px 14px; font-size: 15px; }
+    pre { white-space: pre-wrap; color: #b7e4c7; }
+  </style>
+</head>
+<body>
+  <main>
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="canvas"></canvas>
+    <button id="capture">Capture</button>
+    <pre id="status">Starting webcam...</pre>
+  </main>
+  <script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const statusEl = document.getElementById("status");
+    const captureButton = document.getElementById("capture");
+    let latestDataUrl = "";
+
+    async function start() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1920 }, height: { ideal: 1080 } },
+          audio: false
+        });
+        video.srcObject = stream;
+        await video.play();
+        statusEl.textContent = `Webcam ready: ${video.videoWidth} x ${video.videoHeight}`;
+      } catch (error) {
+        statusEl.textContent = `Webcam error: ${error.name}: ${error.message}`;
+      }
+    }
+
+    function capture() {
+      const width = video.videoWidth || 1280;
+      const height = video.videoHeight || 720;
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, width, height);
+      latestDataUrl = canvas.toDataURL("image/png");
+      window.latestChessboardFrame = latestDataUrl;
+      statusEl.textContent = `Captured frame: ${width} x ${height}`;
+      return latestDataUrl;
+    }
+
+    captureButton.addEventListener("click", capture);
+    window.captureChessboardFrame = capture;
+    start();
+  </script>
+</body>
+</html>

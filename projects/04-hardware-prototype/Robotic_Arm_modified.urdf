@@ -1,0 +1,286 @@
+<?xml version="1.0"?>
+<robot name="sao_arm_DH_table_direct_link_v5">
+  <!--
+    DH table reference used by this visual URDF:
+      i  a_i     alpha_i   d_i   theta_i
+      1  -b      pi/2      L1    q1
+      2  L2      0         0     q2 + pi/2
+      3  L3      0         0     q3
+      4  0       -pi/2     0     q4 - pi/2
+      5  0       0         L4    q5
+
+    Numerical values:
+      b  = 0.025 m
+      L1 = 0.050 m
+      L2 = 0.190 m
+      L3 = 0.130 m
+      L4 = 0.055 m
+
+    This version uses the DH offset x = -b, z = L1 at joint2 and adds a
+    direct visible connector between the rotating base and the upper arm.
+    The wrist joint axis is set parallel to the shoulder and elbow pitch axes.
+  -->
+  <material name="yellow">
+    <color rgba="1.0 0.82 0.12 1.0" />
+  </material>
+  <material name="dark">
+    <color rgba="0.05 0.05 0.05 1.0" />
+  </material>
+  <material name="gray">
+    <color rgba="0.55 0.55 0.55 1.0" />
+  </material>
+  <material name="board_black">
+    <color rgba="0.1 0.1 0.1 1.0" />
+  </material>
+  <!-- ================= Base ================= -->
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001" />
+    </inertial>
+  </link>
+  <!-- ================= Joint 1 rotating base ================= -->
+  <link name="shoulder_pan_link">
+    <inertial>
+      <origin xyz="0 0 0.0125" rpy="0 0 0" />
+      <mass value="0.12" />
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0.0125" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.030" length="0.025" />
+      </geometry>
+      <material name="dark" />
+    </visual>
+    <!-- Direct visible connector from rotating turntable to shoulder joint.
+         It follows the joint2 DH offset vector: x = -0.025 m, z = +0.050 m. -->
+    <visual>
+      <origin xyz="-0.0125 0 0.025" rpy="0 -0.46365 0" />
+      <geometry>
+        <box size="0.018 0.018 0.056" />
+      </geometry>
+      <material name="yellow" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.0125" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.030" length="0.025" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="-0.0125 0 0.025" rpy="0 -0.46365 0" />
+      <geometry>
+        <box size="0.018 0.018 0.056" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="shoulder_pan" type="revolute">
+    <parent link="base_link" />
+    <child link="shoulder_pan_link" />
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <axis xyz="0 0 1" />
+    <limit lower="-3.14159" upper="3.14159" effort="10" velocity="2" />
+  </joint>
+  <!-- ================= Upper arm L2 = 0.190 m ================= -->
+  <link name="upper_arm_link">
+    <inertial>
+      <origin xyz="0 0 0.095" rpy="0 0 0" />
+      <mass value="0.093" />
+      <inertia ixx="0.00038" ixy="0" ixz="0" iyy="0.00038" iyz="0" izz="0.00001" />
+    </inertial>
+    <!-- Direct link from shoulder joint upward. No extra support block. -->
+    <visual>
+      <origin xyz="0 0 0.095" rpy="0 0 0" />
+      <geometry>
+        <box size="0.025 0.025 0.190" />
+      </geometry>
+      <material name="yellow" />
+    </visual>
+    <!-- Smaller shoulder and elbow joint cylinders, axis along local Y -->
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0" />
+      <geometry>
+        <cylinder radius="0.011" length="0.028" />
+      </geometry>
+      <material name="dark" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0.190" rpy="1.5708 0 0" />
+      <geometry>
+        <cylinder radius="0.011" length="0.028" />
+      </geometry>
+      <material name="dark" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.095" rpy="0 0 0" />
+      <geometry>
+        <box size="0.025 0.025 0.190" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="shoulder_lift" type="revolute">
+    <parent link="shoulder_pan_link" />
+    <child link="upper_arm_link" />
+    <!-- DH row 1 offset: a1 = -b, d1 = L1 -->
+    <origin xyz="-0.025 0 0.05" rpy="0 0 0" />
+    <axis xyz="0 1 0" />
+    <limit lower="-2.26893" upper="2.26893" effort="10" velocity="2" />
+  </joint>
+  <!-- ================= Lower arm L3 = 0.130 m ================= -->
+  <link name="lower_arm_link">
+    <inertial>
+      <origin xyz="0 0 0.065" rpy="0 0 0" />
+      <mass value="0.075" />
+      <inertia ixx="0.00020" ixy="0" ixz="0" iyy="0.00020" iyz="0" izz="0.00001" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0.065" rpy="0 0 0" />
+      <geometry>
+        <box size="0.023 0.023 0.130" />
+      </geometry>
+      <material name="yellow" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0.130" rpy="1.5708 0 0" />
+      <geometry>
+        <cylinder radius="0.010" length="0.026" />
+      </geometry>
+      <material name="dark" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.065" rpy="0 0 0" />
+      <geometry>
+        <box size="0.023 0.023 0.130" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="elbow_flex" type="revolute">
+    <parent link="upper_arm_link" />
+    <child link="lower_arm_link" />
+    <!-- DH row 2 link length: L2 -->
+    <origin xyz="0 0 0.190" rpy="0 0 0" />
+    <axis xyz="0 1 0" />
+    <limit lower="-2.26893" upper="2.26893" effort="10" velocity="2" />
+  </joint>
+  <!-- ================= Wrist pitch motor / joint visual, not wrist length ================= -->
+  <link name="wrist_pitch_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.055" />
+      <inertia ixx="0.00005" ixy="0" ixz="0" iyy="0.00005" iyz="0" izz="0.00005" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0" />
+      <geometry>
+        <cylinder radius="0.010" length="0.026" />
+      </geometry>
+      <material name="dark" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5708 0 0" />
+      <geometry>
+        <cylinder radius="0.010" length="0.026" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="wrist_flex" type="revolute">
+    <parent link="lower_arm_link" />
+    <child link="wrist_pitch_link" />
+    <!-- DH row 3 link length: L3 -->
+    <origin xyz="0 0 0.130" rpy="0 0 0" />
+    <axis xyz="0 1 0" />
+    <limit lower="-2.26893" upper="2.26893" effort="10" velocity="2" />
+  </joint>
+  <!-- ================= Wrist link: 55 mm from wrist motor to wrist end ================= -->
+  <link name="wrist_roll_link">
+    <inertial>
+      <origin xyz="0 0 0.0275" rpy="0 0 0" />
+      <mass value="0.060" />
+      <inertia ixx="0.00006" ixy="0" ixz="0" iyy="0.00006" iyz="0" izz="0.00002" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0.0275" rpy="0 0 0" />
+      <geometry>
+        <box size="0.020 0.020 0.055" />
+      </geometry>
+      <material name="yellow" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.0275" rpy="0 0 0" />
+      <geometry>
+        <box size="0.020 0.020 0.055" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="wrist_roll" type="revolute">
+    <parent link="wrist_pitch_link" />
+    <child link="wrist_roll_link" />
+    <!-- Wrist roll / rotating gripper axis is along the gripper length. -->
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.26893" upper="2.26893" effort="10" velocity="2" />
+  </joint>
+  <!-- ================= Gripper jaws: 120 mm from wrist end to jaw tip ================= -->
+  <link name="fixed_jaw_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.010" />
+      <inertia ixx="0.000005" ixy="0" ixz="0" iyy="0.000005" iyz="0" izz="0.000005" />
+    </inertial>
+    <visual>
+      <origin xyz="0 -0.012 0.060" rpy="0 0 0" />
+      <geometry>
+        <box size="0.010 0.010 0.120" />
+      </geometry>
+      <material name="dark" />
+    </visual>
+    <collision>
+      <origin xyz="0 -0.012 0.060" rpy="0 0 0" />
+      <geometry>
+        <box size="0.010 0.010 0.120" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="fixed_jaw_joint" type="fixed">
+    <parent link="wrist_roll_link" />
+    <child link="fixed_jaw_link" />
+    <origin xyz="0 0 0.055" rpy="0 0 0" />
+  </joint>
+  <link name="moving_jaw_so101_v1_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.012" />
+      <inertia ixx="0.000005" ixy="0" ixz="0" iyy="0.000005" iyz="0" izz="0.000005" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0.012 0.060" rpy="0 0 0" />
+      <geometry>
+        <box size="0.010 0.010 0.120" />
+      </geometry>
+      <material name="dark" />
+    </visual>
+    <collision>
+      <origin xyz="0 0.012 0.060" rpy="0 0 0" />
+      <geometry>
+        <box size="0.010 0.010 0.120" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="gripper" type="revolute">
+    <parent link="wrist_roll_link" />
+    <child link="moving_jaw_so101_v1_link" />
+    <origin xyz="0 0 0.055" rpy="0 0 0" />
+    <axis xyz="0 0 1" />
+    <limit lower="-3.14159" upper="3.14159" effort="10" velocity="2" />
+  </joint>
+  <!-- Grasping point: wrist length 55 mm + 110 mm from wrist end = 165 mm from wrist_roll_link origin. -->
+  <link name="gripper_center_link" />
+  <joint name="gripper_center_joint" type="fixed">
+    <parent link="wrist_roll_link" />
+    <child link="gripper_center_link" />
+    <origin xyz="0 0 0.165" rpy="0 0 0" />
+  </joint>
+  <!-- ================= Chessboard ================= -->
+</robot>
