@@ -1,93 +1,132 @@
-# Robotic Arm — Modeling, Motion Planning & Chess Manipulation
+# Robotic Arm | Model-Based Chess Manipulation
 
-A robotic arm project that connects mathematical modeling, trajectory planning, and physical servo control through a chess pick-and-place application. Developed as a team project for MCEN90028 Robotics Systems, it covers forward kinematics, workspace analysis, Jacobian-based inverse kinematics, and interactive control of an assembled arm.
+**Kinematic Modeling · Constrained Motion Planning · Hardware Integration**
 
-## Hardware Demo
+面向棋子抓取与放置的机械臂系统：从运动学建模、工作空间分析与轨迹规划，到舵机标定、串口通信和实机执行，贯通机器人算法与硬件集成流程。
 
-Two control modes demonstrate the arm's chess manipulation workflow. Click a preview to watch the short video.
+Developed as a team project at the University of Melbourne for MCEN90028 Robotics Systems. The system translates chessboard targets into executable joint configurations, supporting programmed pick-and-place and joystick-assisted manipulation.
 
-### Automatic Pick & Place
+[Hardware demos](#hardware-demonstrations) · [Modeling gallery](#modeling-and-planning-gallery) · [Technical approach](#technical-approach) · [Code map](#code-map) · [Setup](docs/SETUP.md)
 
-The arm executes a programmed manipulation sequence, coordinating its joints and gripper over the chessboard.
+## Hardware Demonstrations
 
-[![Watch automatic pick and place](media/automatic-pick-and-place.jpg)](media/automatic-pick-and-place.mp4)
+### Programmed pick & place
 
-### Joystick Pick & Place
+A physical arm coordinates joint motion and gripper actions to transfer chess pieces. **Click the image to watch the demonstration.**
 
-An operator directs the arm using the joystick interface during piece handling.
+[![Automatic chess-piece pick and place on the physical robot](media/automatic-pick-and-place.jpg)](media/automatic-pick-and-place.mp4)
 
-[![Watch joystick pick and place](media/joystick-pick-and-place.jpg)](media/joystick-pick-and-place.mp4)
+### Joystick-assisted manipulation
 
-## What the Project Implements
+The operator controls the manipulation workflow through a joystick interface.
 
-- **Kinematics and workspace modeling:** link geometry, zero configurations, forward transformations, and reachable workspace visualization.
-- **Jacobian analysis:** symbolic derivation, verification scripts, and torque evaluation outputs.
-- **Constrained inverse kinematics:** damped least-squares updates with joint limits, bounded steps, elbow clearance, and wrist-orientation preferences.
-- **Chess manipulation:** board-square coordinate mapping and approach, grasp, lift, transfer, and release sequences.
-- **Cached motion planning:** precomputed IK configurations for scripted moves, joystick positions, and transfers.
-- **Physical-arm control:** serial motor commands, feedback acquisition, zero-offset calibration, and position/velocity control implementations.
-- **Operator interfaces:** joystick-assisted manipulation and camera capture/cropping for operator-selected moves.
+[![Joystick-assisted chess manipulation](media/joystick-pick-and-place.jpg)](media/joystick-pick-and-place.mp4)
+
+## Engineering Highlights
+
+| Engineering problem | Implementation | Purpose |
+| --- | --- | --- |
+| Can the arm reach the board? | DH-based forward kinematics and sampled workspace visualization | Inspect board placement against modeled reachability |
+| How should the gripper approach a piece? | Damped least-squares IK, bounded updates, joint limits, elbow clearance and wrist-orientation preferences | Generate useful configurations for grasping and placement |
+| How is a chess move executed? | Board-to-world mapping and approach → grasp → lift → transfer → release → retreat sequencing | Turn square-level targets into coordinated manipulation |
+| How is planning connected to hardware? | Cached IK configurations, servo offsets, motor directions and MATLAB serial commands | Separate configuration generation from motion execution |
+| How can an operator interact? | Programmed sequences, joystick control and camera board-view tooling | Support demonstrations and interactive operation |
+
+## Modeling and Planning Gallery
+
+### 1. Workspace analysis and board placement
+
+The sampled end-effector workspace is visualized together with the chessboard. This supports geometric reachability inspection; a reachable position still needs a feasible grasp posture and transfer path.
+
+![DH-based sampled robot workspace and chessboard](projects/01-kinematics/3D%20View.jpg)
+
+[Workspace implementation](projects/01-kinematics/WorkSpace.m)
+
+### 2. URDF-based posture inspection
+
+Robot configurations at two board targets are overlaid with the same modeled wrist angle. The visualization makes the relationship between target location, joint posture and tool orientation explicit.
+
+![URDF-based arm configurations with matching wrist angle](projects/05-matlab-control/Fig_URDF_A5_C6_overlay_same_true_wrist_angle.png)
+
+### 3. Manipulation trajectory and intermediate configurations
+
+Intermediate arm configurations visualize a planned transfer across the board. Cartesian traces show how the end-effector coordinates evolve along the simulated path.
+
+![Intermediate robot configurations along a planned chessboard transfer](archive/experiments/a3/Fig4_robot_poses_D1_to_H8_jacobian_IK.png)
+
+![Simulated Cartesian trajectory over time](archive/experiments/a3/Fig1_xyz_vs_time.png)
+
+These figures are saved modeling and simulation outputs. The videos above show physical operation; the plots are not presented as measured hardware tracking results.
 
 ## System Architecture
 
 ```mermaid
-flowchart LR
-    A[Scripted moves / Joystick] --> B[Board coordinate mapping]
-    B --> C[Pick-and-place sequence]
-    C --> D[Constrained IK / Cached configurations]
-    D --> E[Joint commands and calibration]
+flowchart TD
+    A[Programmed move / Joystick / Operator-selected move] --> B[Chessboard-to-world coordinates]
+    B --> C[Approach · Grasp · Lift · Transfer · Release · Retreat]
+    C --> D[Constrained IK / Precomputed configurations]
+    D --> E[Servo calibration and joint commands]
     E --> F[MATLAB serial interface]
-    F --> G[Arduino and servo arm]
+    F --> G[Arduino · Servo arm · Gripper]
     G --> H[Feedback and diagnostics]
-    I[Camera board view] --> J[Operator-selected move]
-    J --> B
+    I[Camera board view] --> A
 ```
 
-The motion module links chessboard targets to joint commands. It handles arm geometry, posture constraints, calibration offsets, and pick-and-place sequencing. Camera tooling provides a board view for an operator to select moves.
+Camera tooling supports board viewing and operator-selected moves. It is not described here as autonomous chess recognition or autonomous game playing.
 
-## Engineering Approach
+## Technical Approach
 
-**Model the reachable space.** Geometry and coordinate transformations describe the arm; workspace and trajectory plots support inspection of board reachability and planned poses.
+### Kinematics and workspace
 
-**Control posture as well as position.** The IK implementation uses damping, bounded updates, elbow clearance, and wrist-angle constraints to generate configurations suited to piece handling.
+DH transformations describe the arm geometry and zero configuration. Workspace scripts sample joint configurations and plot the corresponding end-effector positions. Symbolic Jacobian derivation and verification scripts connect joint motion to Cartesian motion and support torque analysis.
 
-**Separate planning from execution.** Precomputation scripts generate reusable configurations, while execution controllers load those configurations for scripted and interactive motion.
+### Task-aware inverse kinematics
 
-**Account for the assembled hardware.** Servo offsets, motor direction settings, board geometry, feedback logs, and tilt-compensation implementations support calibration and control tuning.
+A Cartesian target alone does not determine a useful grasp posture. The motion module combines damped least-squares updates with bounded steps, joint limits, elbow clearance and wrist preferences. These are configuration constraints and heuristics; they are not a general collision-free planning guarantee.
 
-## Repository Structure
+### Planning and execution
+
+IK precomputation scripts create reusable joint configurations for scripted moves, joystick targets and transfers. Execution routines coordinate arm motion with gripper opening and closing through distinct manipulation stages. Separate controller variants explore position and velocity control.
+
+### Hardware calibration and integration
+
+Servo zero offsets, motor directions, board geometry and feedback tooling connect the mathematical model to the assembled hardware. Alternative compensation and control iterations remain available in the archive for technical review.
+
+## Code Map
+
+| Module | Recommended entry point |
+| --- | --- |
+| Forward kinematics and workspace | [WorkSpace.m](projects/01-kinematics/WorkSpace.m) |
+| Jacobian derivation and verification | [Jacobian_verification.m](projects/02-jacobian/Jacobian_verification.m) |
+| URDF trajectory planning | [Path_planning.m](projects/03-path-planning/Path_planning.m) |
+| Integrated manipulation and IK | [chessMoveModule.m](projects/06-chess-robot/matlab/chessMoveModule.m) |
+| Offline configuration generation | [precomputeTask1IK.m](projects/06-chess-robot/matlab/precomputeTask1IK.m) |
+| Joystick manipulation | [runTask2JoystickControl.m](projects/06-chess-robot/matlab/runTask2JoystickControl.m) |
+| Command-based control session | [startChessRobotSession.m](projects/06-chess-robot/startChessRobotSession.m) |
 
 ```text
 projects/
-  01-kinematics/          Forward kinematics and workspace
-  02-jacobian/            Jacobian derivation and verification
+  01-kinematics/          Geometry, forward kinematics and workspace
+  02-jacobian/            Jacobian analysis and verification
   03-path-planning/       URDF models and trajectory simulation
   04-hardware-prototype/  Position-control development
-  05-matlab-control/      Serial communication and trajectory tools
-  06-chess-robot/         Integrated chess manipulation and interfaces
-media/                   Short hardware demos and preview images
-docs/                    Setup and configuration notes
+  05-matlab-control/      Communication and trajectory tools
+  06-chess-robot/         Integrated manipulation and interfaces
+media/                   Hardware demonstration videos
+docs/                    Setup and technical presentation notes
 archive/                 Earlier modeling and control iterations
 ```
 
-For a technical review, begin with the [chess movement module](projects/06-chess-robot/matlab/chessMoveModule.m), [IK precomputation](projects/06-chess-robot/matlab/precomputeTask1IK.m), and [joystick controller](projects/06-chess-robot/matlab/runTask2JoystickControl.m). Alternative position/velocity and compensation implementations are retained in `archive/`.
-
-## Simulation Outputs
-
-![Cartesian trajectory over time](archive/experiments/a3/Fig1_xyz_vs_time.png)
-
-![Robot configurations along a planned trajectory](archive/experiments/a3/Fig4_robot_poses_D1_to_H8_jacobian_IK.png)
-
 ## Technology Stack
 
-- **Modeling and control:** MATLAB, Robotics System Toolbox, Symbolic Math Toolbox, URDF.
-- **Hardware:** Arduino, servo motors, serial communication, joystick.
-- **Camera tooling:** Python, Pillow, FFmpeg, Node.js, PowerShell.
+**Core:** MATLAB · Robotics System Toolbox · Symbolic Math Toolbox · URDF<br>**Hardware:** Arduino · Servo motors · Gripper · Joystick · Serial communication<br>**Supporting camera tools:** Python/Pillow · FFmpeg · Node.js · PowerShell
 
 ## Getting Started
 
-1. Open `projects/01-kinematics/` in MATLAB and run `WorkSpace.m` to explore the modeled workspace.
-2. Explore trajectory and URDF scripts in `projects/03-path-planning/`.
-3. For physical manipulation, configure the course communication libraries, motor settings, board geometry, servo calibration, and IK caches in `projects/06-chess-robot/`.
+1. Run `projects/01-kinematics/WorkSpace.m` in its MATLAB directory to inspect the workspace.
+2. Explore the URDF and trajectory scripts in `projects/03-path-planning/`.
+3. For hardware, follow [SETUP.md](docs/SETUP.md), supply the required upstream communication libraries, and configure motor IDs, directions, serial port, board geometry, offsets and IK caches.
 
-See [setup instructions](docs/SETUP.md) for dependencies and hardware configuration. Load one controller variant at a time because implementations share function names.
+Use one controller variant at a time: multiple directories contain functions with the same names. The separate `so101.urdf` requires mesh assets not included here. No new hardware or MATLAB execution was performed during this documentation update.
+
+For a concise technical walkthrough, see [Project Walkthrough](docs/PROJECT_WALKTHROUGH.md). Existing setup and provenance notes remain in [docs](docs/SETUP.md).
