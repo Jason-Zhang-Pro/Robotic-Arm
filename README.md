@@ -2,7 +2,7 @@
 
 **Kinematic Modeling · Constrained Motion Planning · Hardware Integration**
 
-面向棋子抓取与放置的机械臂系统：从运动学建模、工作空间分析与轨迹规划，到舵机标定、串口通信和实机执行，贯通机器人算法与硬件集成流程。
+A chess-piece manipulation system connecting kinematic modeling, workspace analysis and trajectory planning with servo calibration, serial communication and physical robot execution.
 
 Developed as a team project at the University of Melbourne for MCEN90028 Robotics Systems. The system translates chessboard targets into executable joint configurations, supporting programmed pick-and-place and joystick-assisted manipulation.
 
@@ -129,4 +129,4 @@ archive/                 Earlier modeling and control iterations
 
 Use one controller variant at a time: multiple directories contain functions with the same names. The separate `so101.urdf` requires mesh assets not included here. No new hardware or MATLAB execution was performed during this documentation update.
 
-For a concise technical walkthrough, see [Project Walkthrough](docs/PROJECT_WALKTHROUGH.md). Existing setup and provenance notes remain in [docs](docs/SETUP.md).
+See [setup and hardware configuration](docs/SETUP.md) for implementation requirements and repository scope.
